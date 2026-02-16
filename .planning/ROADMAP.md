@@ -63,11 +63,21 @@ The structure derives from requirement dependencies: foundation patterns must ex
 
 **Dependencies:** Phase 1 (patterns established)
 
+**Plans:** 6 plans in 3 waves
+
 **Requirements:**
 
 - CONN-03: Connect to Bybit via REST API
 - CONN-04: Connect to Bybit via WebSocket
 - CONN-07: Bybit per-second rate limiting
+
+**Plans:**
+- [ ] 02-01-PLAN.md — URLs & Signer foundation (Wave 1)
+- [ ] 02-02-PLAN.md — WebSocket message types (Wave 1)
+- [ ] 02-03-PLAN.md — Subscription manager (Wave 1)
+- [ ] 02-04-PLAN.md — REST client with rate limiting (Wave 2)
+- [ ] 02-05-PLAN.md — WebSocket client with dynamic subscribe (Wave 2)
+- [ ] 02-06-PLAN.md — Driver interface & implementation (Wave 3)
 
 **Success Criteria:**
 
@@ -161,7 +171,7 @@ The structure derives from requirement dependencies: foundation patterns must ex
 | Phase                          | Status      | Requirements | Progress |
 | ------------------------------ | ----------- | ------------ | -------- |
 | 1 - Foundation & Binance       | Planned     | 13           | 0%       |
-| 2 - Bybit Infrastructure       | Not Started | 3            | 0%       |
+| 2 - Bybit Infrastructure       | Planned     | 3            | 0%       |
 | 3 - Market Data Pipeline       | Not Started | 5            | 0%       |
 | 4 - Order Management & Account | Not Started | 13           | 0%       |
 | 5 - Cross-Exchange Aggregation | Not Started | 3            | 0%       |
