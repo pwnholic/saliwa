@@ -20,14 +20,14 @@
 | Field        | Value                                   |
 | ------------ | --------------------------------------- |
 | **Phase**    | 1 of 5 (Foundation & Binance Infrastructure) |
-| **Plan**     | 1 of 4 complete                         |
+| **Plan**     | 2 of 4 complete                         |
 | **Status**   | In progress                             |
-| **Progress** | 3/37 requirements (8%)                  |
+| **Progress** | 6/37 requirements (16%)                 |
 
 ```
-Progress: [█░░░░░░░░░░░░░░░░░░░] 8%
+Progress: [██░░░░░░░░░░░░░░░░░░] 16%
 
-Phase 1: ██░░░░░░░░░░░░░░░░░░ 25% (1/4 plans)
+Phase 1: █████░░░░░░░░░░░░░░░ 50% (2/4 plans)
 Phase 2: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 Phase 3: ░░░░░░░░░░░░░░░░░░░░ 0% (0/5)
 Phase 4: ░░░░░░░░░░░░░░░░░░░░ 0% (0/13)
@@ -42,7 +42,7 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 | -------------------------- | ----- |
 | Sessions on this milestone | 1     |
 | Phases completed           | 0     |
-| Requirements delivered     | 3     |
+| Requirements delivered     | 6     |
 | Blockers encountered       | 0     |
 | Plans revised              | 0     |
 
@@ -61,6 +61,9 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 | 01-01 | time.Time for timestamps | All timestamps use time.Time (not int64) for type safety | 2026-02-16 |
 | 01-01 | Symbol normalization | Symbols normalized to "BASE/QUOTE" format internally | 2026-02-16 |
 | 01-01 | OrderStatus state machine | CanTransition() method prevents invalid state changes | 2026-02-16 |
+| 01-02 | resty v3 for HTTP | Modern HTTP client with middleware support, requires explicit Close() | 2026-02-16 |
+| 01-02 | Weight-based rate limiting | Token bucket algorithm with server header tracking for accuracy | 2026-02-16 |
+| 01-02 | recvWindow defaults | 5000ms default, 60000ms max per Binance documentation | 2026-02-16 |
 
 ### Active Technical Context
 
@@ -81,6 +84,7 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 - Event-driven market data with topic routing
 - Driver interface for exchange implementations
 - Immutable domain models with decimal precision
+- Middleware pattern for request/response processing
 
 ### Known Blockers
 
@@ -100,27 +104,31 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 - [x] Validated 100% coverage (37/37 requirements)
 - [x] Created Phase 1 plans (4 plans in 3 waves)
 - [x] **Executed 01-01: Project foundation with domain models**
+- [x] **Executed 01-02: Binance REST client with signing & rate limiting**
 
 **Next Steps:**
 
-1. Execute 01-02: Binance REST client (Wave 2)
-2. Execute 01-03: Binance WebSocket (Wave 2, parallel)
-3. Execute 01-04: Driver interface (Wave 3)
+1. Execute 01-03: Binance WebSocket (Wave 2)
+2. Execute 01-04: Driver interface (Wave 3)
 
 ### Files Changed This Session
 
-| File                        | Action               |
-| --------------------------- | -------------------- |
-| `.planning/ROADMAP.md`      | Created              |
-| `.planning/STATE.md`        | Created/Updated      |
-| `.planning/REQUIREMENTS.md` | Updated traceability |
-| `go.mod`                    | Created              |
-| `pkg/domain/decimal.go`     | Created              |
-| `pkg/domain/types.go`       | Created              |
-| `pkg/domain/symbol.go`      | Created              |
-| `pkg/errors/errors.go`      | Created              |
-| `pkg/errors/rate_limit.go`  | Created              |
-| `pkg/errors/connection.go`  | Created              |
+| File                                  | Action               |
+| ------------------------------------- | -------------------- |
+| `.planning/ROADMAP.md`                | Created              |
+| `.planning/STATE.md`                  | Created/Updated      |
+| `.planning/REQUIREMENTS.md`           | Updated traceability |
+| `go.mod`                              | Created              |
+| `pkg/domain/decimal.go`               | Created              |
+| `pkg/domain/types.go`                 | Created              |
+| `pkg/domain/symbol.go`                | Created              |
+| `pkg/errors/errors.go`                | Created              |
+| `pkg/errors/rate_limit.go`            | Created              |
+| `pkg/errors/connection.go`            | Created              |
+| `internal/driver/binance/urls.go`     | Created              |
+| `internal/driver/binance/signer.go`   | Created              |
+| `internal/ratelimit/weighted.go`      | Created              |
+| `internal/driver/binance/rest_client.go` | Created           |
 
 ---
 
@@ -128,7 +136,7 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 
 | Phase                    | Started     | Completed | Sessions | Notes              |
 | ------------------------ | ----------- | --------- | -------- | ------------------ |
-| 1 - Foundation & Binance | 2026-02-16  | -         | 1        | Plan 01-01 done    |
+| 1 - Foundation & Binance | 2026-02-16  | -         | 1        | Plans 01-01, 01-02 done |
 | 2 - Bybit Driver         | -           | -         | -        | Not started        |
 | 3 - Market Data          | -           | -         | -        | Not started        |
 | 4 - Order Management     | -           | -         | -        | Not started        |
@@ -137,4 +145,4 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 ---
 
 _State initialized: 2026-02-16_
-_Last updated: 2026-02-16T11:24:36Z_
+_Last updated: 2026-02-16T11:43:17Z_
