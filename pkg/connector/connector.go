@@ -11,7 +11,7 @@ import (
 
 	"github.com/lilwiggy/ex-act/internal/circuit"
 	"github.com/lilwiggy/ex-act/internal/driver/binance"
-	internalsync "github.com/lilwiggy/ex-act/internal/sync"
+	internalSync "github.com/lilwiggy/ex-act/internal/sync"
 	"github.com/lilwiggy/ex-act/pkg/domain"
 )
 
@@ -25,8 +25,8 @@ type Connector struct {
 	restClient     *binance.RESTClient
 	wsClient       *binance.WSClient
 	circuitBreaker *circuit.Breaker
-	clockSync      *internalsync.ClockSync
-	nonceGen       *internalsync.NonceGenerator
+	clockSync      *internalSync.ClockSync
+	nonceGen       *internalSync.NonceGenerator
 
 	// State
 	running   atomic.Bool
@@ -54,7 +54,7 @@ func New(cfg Config) (*Connector, error) {
 		config:   cfg,
 		exchange: cfg.Exchange.Name,
 		ready:    make(chan struct{}),
-		nonceGen: internalsync.NewNonceGenerator(),
+		nonceGen: internalSync.NewNonceGenerator(),
 		ctx:      ctx,
 		cancel:   cancel,
 	}
@@ -98,7 +98,7 @@ func (c *Connector) initComponents() error {
 
 	// Create clock sync
 	if c.config.ClockSync.Enabled {
-		c.clockSync = internalsync.NewClockSync(c.exchange, internalsync.ClockConfig{
+		c.clockSync = internalSync.NewClockSync(c.exchange, internalSync.ClockConfig{
 			MaxOffset:    c.config.ClockSync.MaxOffset,
 			SyncInterval: c.config.ClockSync.SyncInterval,
 			TimeProvider: c.restClient.GetServerTime,
@@ -178,29 +178,25 @@ func (c *Connector) Start() error {
 
 	// Start clock sync (required for signed requests)
 	if c.clockSync != nil {
-		c.wg.Add(1)
-		go func() {
-			defer c.wg.Done()
+		c.wg.Go(func() {
 			if err := c.clockSync.Start(); err != nil {
 				log.Error().Err(err).Msg("clock sync failed")
 				if c.handlers.OnError != nil {
 					c.handlers.OnError(c.exchange, err)
 				}
 			}
-		}()
+		})
 	}
 
 	// Connect WebSocket
-	c.wg.Add(1)
-	go func() {
-		defer c.wg.Done()
+	c.wg.Go(func() {
 		if err := c.wsClient.Connect(); err != nil {
 			log.Error().Err(err).Msg("WebSocket connection failed")
 			if c.handlers.OnError != nil {
 				c.handlers.OnError(c.exchange, err)
 			}
 		}
-	}()
+	})
 
 	// For simple cases without subscriptions, mark ready immediately
 	// WebSocket will mark ready when it connects
