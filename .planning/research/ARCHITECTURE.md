@@ -16,6 +16,7 @@ Production-grade cryptocurrency exchange connectors require a **layered, fault-t
 4. **Cross-exchange concerns** - Symbol normalization, timestamp synchronization, and aggregated views across multiple venues
 
 The recommended architecture combines:
+
 - **Actor model** (Ergo Framework) for isolation, supervision, and message-passing concurrency
 - **CQRS pattern** for order management (separate command/write and query/read paths)
 - **Event-driven design** for real-time market data distribution
@@ -99,37 +100,37 @@ The recommended architecture combines:
 
 ### Root-Level Actors
 
-| Actor | Responsibility | Supervision Strategy | Dependencies |
-|-------|---------------|---------------------|--------------|
-| **RootSupervisor** | Top-level fault containment | OneForOne, Intensity: 5/10s, RestartTransient | None |
-| **CoordinatorActor** | Message routing, command dispatch | Restarts on failure | None |
-| **HealthCheckActor** | Circuit breaker state, exchange health monitoring | Critical - restart immediately | None |
-| **AggregatorActor** | Cross-exchange data aggregation, unified views | Restart on failure | Exchange supervisors |
-| **RiskManagerActor** | Position limits, exposure alerts, pre-trade risk checks | Critical - never die | OrderStore, PositionStore |
-| **MetricsCollectorActor** | Prometheus-style metrics, latency tracking | Non-critical | None |
+| Actor                     | Responsibility                                          | Supervision Strategy                          | Dependencies              |
+| ------------------------- | ------------------------------------------------------- | --------------------------------------------- | ------------------------- |
+| **RootSupervisor**        | Top-level fault containment                             | OneForOne, Intensity: 5/10s, RestartTransient | None                      |
+| **CoordinatorActor**      | Message routing, command dispatch                       | Restarts on failure                           | None                      |
+| **HealthCheckActor**      | Circuit breaker state, exchange health monitoring       | Critical - restart immediately                | None                      |
+| **AggregatorActor**       | Cross-exchange data aggregation, unified views          | Restart on failure                            | Exchange supervisors      |
+| **RiskManagerActor**      | Position limits, exposure alerts, pre-trade risk checks | Critical - never die                          | OrderStore, PositionStore |
+| **MetricsCollectorActor** | Prometheus-style metrics, latency tracking              | Non-critical                                  | None                      |
 
 ### Persistence Layer (PersistenceSupervisor)
 
-| Actor | Responsibility | Supervision Strategy | Key Operations |
-|-------|---------------|---------------------|----------------|
-| **OrderStoreActor** | Order persistence, history | AllForOne with siblings | GetOrder, SaveOrder, GetHistory |
-| **PositionStoreActor** | Position tracking per symbol | AllForOne with siblings | GetPosition, UpdatePosition |
-| **BalanceStoreActor** | Available balance per asset | AllForOne with siblings | GetBalance, ReserveBalance |
-| **ReconcilerActor** | Periodic state reconciliation with exchange | AllForOne with siblings | ReconcileOrders, ReconcilePositions |
+| Actor                  | Responsibility                              | Supervision Strategy    | Key Operations                      |
+| ---------------------- | ------------------------------------------- | ----------------------- | ----------------------------------- |
+| **OrderStoreActor**    | Order persistence, history                  | AllForOne with siblings | GetOrder, SaveOrder, GetHistory     |
+| **PositionStoreActor** | Position tracking per symbol                | AllForOne with siblings | GetPosition, UpdatePosition         |
+| **BalanceStoreActor**  | Available balance per asset                 | AllForOne with siblings | GetBalance, ReserveBalance          |
+| **ReconcilerActor**    | Periodic state reconciliation with exchange | AllForOne with siblings | ReconcileOrders, ReconcilePositions |
 
 **Rationale for AllForOne**: Data stores must maintain consistency. If one store fails, all should restart together to prevent partial state.
 
 ### Per-Exchange Actors (ExchangeSupervisor)
 
-| Actor | Responsibility | Supervision Strategy | Message Types |
-|-------|---------------|---------------------|---------------|
-| **ClockSyncActor** | NTP-style clock sync with exchange, timestamp drift correction | RestartTransient | SyncClock, GetOffset |
-| **RateLimitGuardActor** | Token bucket rate limiting, weight tracking (Binance), backpressure | RestartTransient | Acquire, Release, GetState |
-| **MarketDataActor** | WebSocket connection, subscription management, reconnection | RestartTransient with backoff | Subscribe, Unsubscribe, Reconnect |
-| **OrderBookActor** | Order book reconstruction (snapshot + delta), sequence validation | Restart on corruption | GetBook, ApplyDelta, Reset |
-| **OrderCommandActor** | CQRS write path - place/cancel orders via REST | RestartTransient | PlaceOrder, CancelOrder |
-| **OrderStateActor** | CQRS read path - order state queries, event projections | Restart on corruption | GetOrder, GetOrders, GetOpen |
-| **PositionTrackerActor** | Real-time position updates from fills, P&L calculation | RestartTransient | UpdatePosition, GetPosition |
+| Actor                    | Responsibility                                                      | Supervision Strategy          | Message Types                     |
+| ------------------------ | ------------------------------------------------------------------- | ----------------------------- | --------------------------------- |
+| **ClockSyncActor**       | NTP-style clock sync with exchange, timestamp drift correction      | RestartTransient              | SyncClock, GetOffset              |
+| **RateLimitGuardActor**  | Token bucket rate limiting, weight tracking (Binance), backpressure | RestartTransient              | Acquire, Release, GetState        |
+| **MarketDataActor**      | WebSocket connection, subscription management, reconnection         | RestartTransient with backoff | Subscribe, Unsubscribe, Reconnect |
+| **OrderBookActor**       | Order book reconstruction (snapshot + delta), sequence validation   | Restart on corruption         | GetBook, ApplyDelta, Reset        |
+| **OrderCommandActor**    | CQRS write path - place/cancel orders via REST                      | RestartTransient              | PlaceOrder, CancelOrder           |
+| **OrderStateActor**      | CQRS read path - order state queries, event projections             | Restart on corruption         | GetOrder, GetOrders, GetOpen      |
+| **PositionTrackerActor** | Real-time position updates from fills, P&L calculation              | RestartTransient              | UpdatePosition, GetPosition       |
 
 ---
 
@@ -143,15 +144,15 @@ Events follow a hierarchical naming pattern for efficient subscription:
 {type}.{exchange}.{symbol}
 ```
 
-| Topic Pattern | Purpose | Consumers |
-|---------------|---------|-----------|
-| `ticker.{exchange}.{symbol}` | Price updates, 24h stats | Aggregator, Strategies |
-| `orderbook.{exchange}.{symbol}` | Order book snapshots/deltas | OrderBookActor, UI |
-| `order.{exchange}.{event}` | Order lifecycle events (placed, filled, canceled) | OrderStateActor, RiskManager |
-| `position.{exchange}.{symbol}` | Position changes | PositionTracker, RiskManager |
-| `connection.{exchange}` | Connection state changes | HealthCheck, Aggregator |
-| `health.{exchange}` | Health status updates (healthy, degraded, down) | HealthCheck, Alerting |
-| `risk.alert` | Risk limit breaches, exposure warnings | Alerting, Logging |
+| Topic Pattern                   | Purpose                                           | Consumers                    |
+| ------------------------------- | ------------------------------------------------- | ---------------------------- |
+| `ticker.{exchange}.{symbol}`    | Price updates, 24h stats                          | Aggregator, Strategies       |
+| `orderbook.{exchange}.{symbol}` | Order book snapshots/deltas                       | OrderBookActor, UI           |
+| `order.{exchange}.{event}`      | Order lifecycle events (placed, filled, canceled) | OrderStateActor, RiskManager |
+| `position.{exchange}.{symbol}`  | Position changes                                  | PositionTracker, RiskManager |
+| `connection.{exchange}`         | Connection state changes                          | HealthCheck, Aggregator      |
+| `health.{exchange}`             | Health status updates (healthy, degraded, down)   | HealthCheck, Alerting        |
+| `risk.alert`                    | Risk limit breaches, exposure warnings            | Alerting, Logging            |
 
 ### Event Flow
 
@@ -207,6 +208,7 @@ Order management uses **Command Query Responsibility Segregation** to separate w
 ```
 
 **Responsibilities**:
+
 - Validate order parameters (price, quantity, symbol filters)
 - Apply risk checks via RiskManagerActor
 - Sign and send to exchange REST API
@@ -234,6 +236,7 @@ Order management uses **Command Query Responsibility Segregation** to separate w
 ```
 
 **Responsibilities**:
+
 - Subscribe to order events from all sources
 - Maintain in-memory order state (fast reads)
 - Handle out-of-order updates (sequence numbers)
@@ -265,13 +268,13 @@ Order management uses **Command Query Responsibility Segregation** to separate w
 
 Based on research findings:
 
-| Concern | Without CQRS | With CQRS |
-|---------|-------------|-----------|
+| Concern                 | Without CQRS                                    | With CQRS                                     |
+| ----------------------- | ----------------------------------------------- | --------------------------------------------- |
 | **Dual update sources** | REST + WebSocket updates race, state corruption | Events sequence correctly, idempotent updates |
-| **Read latency** | Database query per request | In-memory reads, sub-millisecond |
-| **Auditability** | Hard to trace state changes | Every change is a stored event |
-| **Backtesting** | Replaying state is complex | Events can be replayed exactly |
-| **Scaling** | Read/write compete for same resource | Scale independently |
+| **Read latency**        | Database query per request                      | In-memory reads, sub-millisecond              |
+| **Auditability**        | Hard to trace state changes                     | Every change is a stored event                |
+| **Backtesting**         | Replaying state is complex                      | Events can be replayed exactly                |
+| **Scaling**             | Read/write compete for same resource            | Scale independently                           |
 
 ---
 
@@ -299,6 +302,7 @@ WebSocket ─────▶ MarketDataActor ─────▶ Parse ───�
 ```
 
 **Key Challenges Addressed**:
+
 1. **Snapshot + Delta**: Order books start with full snapshot, then apply deltas
 2. **Sequence Validation**: Each update has sequence number, detect gaps
 3. **Out-of-Order**: Buffer updates until gap filled or timeout
@@ -379,12 +383,12 @@ Client                OrderCommandActor        Exchange          OrderStateActor
 
 Exchanges use different symbol formats:
 
-| Exchange | BTC/USDT Format | ETH-PERP Format |
-|----------|-----------------|-----------------|
-| Binance | `BTCUSDT` | `ETHUSDT` (perp) |
-| Bybit | `BTCUSDT` | `ETHUSDT` (linear) |
-| OKX | `BTC-USDT` | `ETH-USDT-SWAP` |
-| Deribit | `BTC-PERPETUAL` | `ETH-PERPETUAL` |
+| Exchange | BTC/USDT Format | ETH-PERP Format    |
+| -------- | --------------- | ------------------ |
+| Binance  | `BTCUSDT`       | `ETHUSDT` (perp)   |
+| Bybit    | `BTCUSDT`       | `ETHUSDT` (linear) |
+| OKX      | `BTC-USDT`      | `ETH-USDT-SWAP`    |
+| Deribit  | `BTC-PERPETUAL` | `ETH-PERPETUAL`    |
 
 **Solution**: Internal canonical format with exchange-specific adapters:
 
@@ -407,6 +411,7 @@ func (b *BinanceAdapter) FromCanonical(sym Symbol) string
 ### Timestamp Synchronization
 
 **Challenge**: Exchanges have different server times, and clock drift causes:
+
 - Invalid signatures (timestamp outside window)
 - Order book sequence gaps
 - Incorrect latency measurements
@@ -436,11 +441,11 @@ func (c *ClockSyncActor) AdjustTimestamp(ts time.Time) time.Time {
 
 Each exchange has unique rate limit structures:
 
-| Exchange | REST Rate Limit | WebSocket Limit | Approach |
-|----------|-----------------|-----------------|----------|
-| Binance | Weight-based (1200/min) | 5 connections, 1024 streams | Token bucket with weights |
-| Bybit | Request-based | 10 connections | Simple rate limiter |
-| OKX | Request-based with tiers | 3 connections | Tiered limiter |
+| Exchange | REST Rate Limit          | WebSocket Limit             | Approach                  |
+| -------- | ------------------------ | --------------------------- | ------------------------- |
+| Binance  | Weight-based (1200/min)  | 5 connections, 1024 streams | Token bucket with weights |
+| Bybit    | Request-based            | 10 connections              | Simple rate limiter       |
+| OKX      | Request-based with tiers | 3 connections               | Tiered limiter            |
 
 **RateLimitGuardActor Implementation**:
 
@@ -498,13 +503,13 @@ RootSupervisor (OneForOne, Intensity: 5/10s)
 
 ### Strategy Selection Rationale
 
-| Supervisor | Strategy | Rationale |
-|------------|----------|-----------|
-| **Root** | OneForOne | Components are independent; one failure shouldn't restart all |
-| **Persistence** | AllForOne | Data stores must maintain consistency; restart all if one fails |
-| **Exchange** | OneForOne | Each actor is independent; MarketData failure shouldn't restart Orders |
-| **Critical actors** | RestartPermanent | Must always be running (HealthCheck, RiskManager) |
-| **Data actors** | RestartTransient | Only restart on error, not normal termination |
+| Supervisor          | Strategy         | Rationale                                                              |
+| ------------------- | ---------------- | ---------------------------------------------------------------------- |
+| **Root**            | OneForOne        | Components are independent; one failure shouldn't restart all          |
+| **Persistence**     | AllForOne        | Data stores must maintain consistency; restart all if one fails        |
+| **Exchange**        | OneForOne        | Each actor is independent; MarketData failure shouldn't restart Orders |
+| **Critical actors** | RestartPermanent | Must always be running (HealthCheck, RiskManager)                      |
+| **Data actors**     | RestartTransient | Only restart on error, not normal termination                          |
 
 ### Restart Intensity Configuration
 
@@ -563,6 +568,7 @@ Based on component dependencies and risk mitigation:
 ### Phase 1: Foundation (Week 1-2)
 
 **Build Order**:
+
 1. **Domain Models** (`pkg/domain/`)
    - Order, Ticker, OrderBook, Position, Balance
    - Decimal arithmetic helpers
@@ -586,6 +592,7 @@ Based on component dependencies and risk mitigation:
 ### Phase 2: Core Actors (Week 2-3)
 
 **Build Order**:
+
 1. **RootSupervisor** (`internal/sup/`)
    - Basic supervisor structure
    - Child spec definitions
@@ -607,6 +614,7 @@ Based on component dependencies and risk mitigation:
 ### Phase 3: Exchange Infrastructure (Week 3-5)
 
 **Build Order**:
+
 1. **Driver Interface** (`pkg/driver/`)
    - REST and WebSocket interfaces
    - Driver registry
@@ -633,6 +641,7 @@ Based on component dependencies and risk mitigation:
 ### Phase 4: Market Data Pipeline (Week 4-6)
 
 **Build Order**:
+
 1. **MarketDataActor** (`internal/market/`)
    - WebSocket subscription management
    - Message parsing and event emission
@@ -651,6 +660,7 @@ Based on component dependencies and risk mitigation:
 ### Phase 5: Order Management (Week 5-7)
 
 **Build Order**:
+
 1. **OrderCommandActor** (`internal/order/`)
    - CQRS write path
    - Place/cancel order logic
@@ -671,6 +681,7 @@ Based on component dependencies and risk mitigation:
 ### Phase 6: Persistence & Reconciliation (Week 6-8)
 
 **Build Order**:
+
 1. **PersistenceSupervisor** (`internal/sup/`)
    - Supervisor for stores
 
@@ -693,6 +704,7 @@ Based on component dependencies and risk mitigation:
 ### Phase 7: Cross-Exchange & Aggregation (Week 7-9)
 
 **Build Order**:
+
 1. **AggregatorActor** (`internal/actor/`)
    - Cross-exchange data aggregation
    - Best price calculation
@@ -710,6 +722,7 @@ Based on component dependencies and risk mitigation:
 ### Phase 8: Public API (Week 8-10)
 
 **Build Order**:
+
 1. **Connector Interface** (`pkg/connector/`)
    - Public API
    - Configuration
@@ -728,11 +741,13 @@ Based on component dependencies and risk mitigation:
 
 **Chosen**: Ergo Framework actor model  
 **Alternatives Considered**:
+
 - Plain goroutines + channels
 - Microservices with gRPC
 - Event-driven with message queue
 
 **Rationale**:
+
 - **Supervision trees**: Built-in fault tolerance with restart strategies
 - **Message passing**: Clean isolation, no shared state
 - **Network transparency**: Can distribute across nodes if needed
@@ -743,10 +758,12 @@ Based on component dependencies and risk mitigation:
 
 **Chosen**: Separate Command and State actors  
 **Alternatives Considered**:
+
 - Single OrderActor handling both reads and writes
 - Database-backed state with caching
 
 **Rationale**:
+
 - **Dual update sources**: REST and WebSocket updates don't race
 - **Read performance**: In-memory queries, no database hit
 - **Auditability**: Every state change is an event
@@ -756,10 +773,12 @@ Based on component dependencies and risk mitigation:
 
 **Chosen**: Event topics with pub/sub  
 **Alternatives Considered**:
+
 - Direct callbacks
 - Message queue (Kafka, NATS)
 
 **Rationale**:
+
 - **Loose coupling**: Consumers don't know about producers
 - **Multiple subscribers**: Same market data feeds strategies, UI, metrics
 - **Backpressure**: Ergo handles slow consumers gracefully
@@ -769,10 +788,12 @@ Based on component dependencies and risk mitigation:
 
 **Chosen**: Each exchange has its own supervisor subtree  
 **Alternatives Considered**:
+
 - All actors under single supervisor
 - Flat actor structure
 
 **Rationale**:
+
 - **Fault isolation**: Binance failure doesn't affect Bybit
 - **Independent scaling**: Can add exchanges without affecting existing
 - **Clear ownership**: Each exchange is a bounded context
@@ -828,24 +849,24 @@ Based on component dependencies and risk mitigation:
 
 ## Research Confidence Assessment
 
-| Area | Confidence | Reason |
-|------|------------|--------|
-| **Actor Patterns** | HIGH | Direct from Ergo documentation via Context7 |
-| **Supervision Strategies** | HIGH | Well-documented in Ergo, proven in Erlang/OTP |
-| **CQRS for Trading** | HIGH | Multiple production implementations documented |
-| **Exchange Protocols** | MEDIUM | Based on web research, may need driver-specific validation |
-| **Rate Limiting** | MEDIUM | Exchange-specific, needs per-exchange documentation lookup |
-| **Order Book Management** | HIGH | Well-documented patterns across sources |
-| **Fault Tolerance** | HIGH | Industry-standard patterns (circuit breaker, supervisor) |
+| Area                       | Confidence | Reason                                                     |
+| -------------------------- | ---------- | ---------------------------------------------------------- |
+| **Actor Patterns**         | HIGH       | Direct from Ergo documentation via Context7                |
+| **Supervision Strategies** | HIGH       | Well-documented in Ergo, proven in Erlang/OTP              |
+| **CQRS for Trading**       | HIGH       | Multiple production implementations documented             |
+| **Exchange Protocols**     | MEDIUM     | Based on web research, may need driver-specific validation |
+| **Rate Limiting**          | MEDIUM     | Exchange-specific, needs per-exchange documentation lookup |
+| **Order Book Management**  | HIGH       | Well-documented patterns across sources                    |
+| **Fault Tolerance**        | HIGH       | Industry-standard patterns (circuit breaker, supervisor)   |
 
 ---
 
 ## Gaps for Phase-Specific Research
 
-| Phase | Research Needed | Why |
-|-------|-----------------|-----|
-| **Binance Driver** | API v3 specifics, rate limit weights, testnet endpoints | Exchange-specific, changes frequently |
-| **Bybit Driver** | API v5 specifics, authentication, WebSocket message formats | Exchange-specific |
-| **Persistence** | Database choice (PostgreSQL, TimescaleDB, Redis) | Depends on scale requirements |
-| **Metrics** | Prometheus integration, custom metrics | Implementation detail |
-| **Deployment** | Container orchestration, configuration management | Infrastructure-specific |
+| Phase              | Research Needed                                             | Why                                   |
+| ------------------ | ----------------------------------------------------------- | ------------------------------------- |
+| **Binance Driver** | API v3 specifics, rate limit weights, testnet endpoints     | Exchange-specific, changes frequently |
+| **Bybit Driver**   | API v5 specifics, authentication, WebSocket message formats | Exchange-specific                     |
+| **Persistence**    | Database choice (PostgreSQL, TimescaleDB, Redis)            | Depends on scale requirements         |
+| **Metrics**        | Prometheus integration, custom metrics                      | Implementation detail                 |
+| **Deployment**     | Container orchestration, configuration management           | Infrastructure-specific               |

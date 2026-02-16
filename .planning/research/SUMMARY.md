@@ -15,16 +15,16 @@ Binance and Bybit serve as the initial targets, covering the majority of spot tr
 
 ## Recommended Stack
 
-| Layer | Technology | Confidence | Rationale |
-|-------|------------|------------|-----------|
-| **Actor System** | Ergo Framework v3.10 | HIGH | Erlang/OTP patterns, supervision trees, message passing |
-| **Decimals** | cockroachdb/apd v3 | HIGH | Arbitrary precision, condition flags, production-proven |
-| **WebSocket** | lxzan/gws | MEDIUM | High performance, parallel processing, active maintenance |
-| **HTTP Client** | resty v3-beta | MEDIUM | Built-in retry, middleware, circuit breaker support |
-| **Logging** | zerolog | HIGH | Zero-allocation, structured JSON, level filtering |
-| **Rate Limiting** | golang.org/x/time/rate | HIGH | Official x-package, token bucket algorithm |
-| **Concurrency** | golang.org/x/sync | HIGH | errgroup for error propagation, singleflight for dedup |
-| **Circuit Breaker** | sony/gobreaker | HIGH | Standard state machine, configurable thresholds |
+| Layer               | Technology             | Confidence | Rationale                                                 |
+| ------------------- | ---------------------- | ---------- | --------------------------------------------------------- |
+| **Actor System**    | Ergo Framework v3.10   | HIGH       | Erlang/OTP patterns, supervision trees, message passing   |
+| **Decimals**        | cockroachdb/apd v3     | HIGH       | Arbitrary precision, condition flags, production-proven   |
+| **WebSocket**       | lxzan/gws              | MEDIUM     | High performance, parallel processing, active maintenance |
+| **HTTP Client**     | resty v3-beta          | MEDIUM     | Built-in retry, middleware, circuit breaker support       |
+| **Logging**         | zerolog                | HIGH       | Zero-allocation, structured JSON, level filtering         |
+| **Rate Limiting**   | golang.org/x/time/rate | HIGH       | Official x-package, token bucket algorithm                |
+| **Concurrency**     | golang.org/x/sync      | HIGH       | errgroup for error propagation, singleflight for dedup    |
+| **Circuit Breaker** | sony/gobreaker         | HIGH       | Standard state machine, configurable thresholds           |
 
 ---
 
@@ -33,6 +33,7 @@ Binance and Bybit serve as the initial targets, covering the majority of spot tr
 Features users expect. Missing these makes the product unusable.
 
 ### Core Connectivity
+
 - **REST API Client** — Universal requirement for all exchange operations
 - **WebSocket Streams** — Real-time data is non-negotiable for trading
 - **Authentication** — HMAC/RSA/Ed25519 for signed requests
@@ -40,18 +41,21 @@ Features users expect. Missing these makes the product unusable.
 - **Reconnection Handling** — Auto-reconnect with subscription recovery
 
 ### Market Data
+
 - **Ticker Streams** — Basic price/24h stats
 - **Order Book Streams** — Essential for market making, arbitrage
 - **Trade Streams** — Historical and real-time execution data
 - **Symbol/Market Info** — Precision, min notional, filters
 
 ### Order Management
+
 - **Place Order** — LIMIT and MARKET order types
 - **Cancel Order** — Essential for risk management
 - **Query Order Status** — Reconciliation and state management
 - **Balance Tracking** — Position management, risk calculation
 
 ### Reliability
+
 - **Structured Errors** — Distinguish rate limits, auth errors, network issues
 - **Retry Logic** — Handle transient errors without data loss
 
@@ -85,10 +89,10 @@ RootSupervisor (OneForOne, 5/10s)
 
 ### 2. CQRS for Order Management
 
-| Path | Actor | Purpose |
-|------|-------|---------|
-| **Write** | OrderCommandActor | Validate, rate limit, submit to exchange, emit events |
-| **Read** | OrderStateActor | Subscribe to events, maintain in-memory state, serve queries |
+| Path      | Actor             | Purpose                                                      |
+| --------- | ----------------- | ------------------------------------------------------------ |
+| **Write** | OrderCommandActor | Validate, rate limit, submit to exchange, emit events        |
+| **Read**  | OrderStateActor   | Subscribe to events, maintain in-memory state, serve queries |
 
 **Rationale:** REST and WebSocket updates can race. CQRS with event sourcing ensures consistent state and auditability.
 
@@ -111,31 +115,33 @@ Critical pitfalls that cause production failures or rewrites.
 
 ### Phase 1 Blockers
 
-| Pitfall | Consequence | Prevention |
-|---------|-------------|------------|
-| **Clock Sync Failure** | All signed requests rejected (-1021) | ClockSyncActor tracking offset, alert on >500ms drift |
-| **Rate Limit Violations** | IP banned (2 min to 3 days) | Weight-based limiter, back off on 429, track X-MBX-USED-WEIGHT |
-| **Float64 for Money** | Incorrect orders, balance errors | Use apd.Decimal everywhere, parse strings, never convert |
-| **Circuit Breaker Absence** | Cascading failures, resource exhaustion | Per-exchange breaker (Closed→Open→Half-Open) |
-| **WebSocket Lifecycle** | Silent data loss, stale data | Heartbeat enforcement, auto-reconnect, resubscribe |
+| Pitfall                     | Consequence                             | Prevention                                                     |
+| --------------------------- | --------------------------------------- | -------------------------------------------------------------- |
+| **Clock Sync Failure**      | All signed requests rejected (-1021)    | ClockSyncActor tracking offset, alert on >500ms drift          |
+| **Rate Limit Violations**   | IP banned (2 min to 3 days)             | Weight-based limiter, back off on 429, track X-MBX-USED-WEIGHT |
+| **Float64 for Money**       | Incorrect orders, balance errors        | Use apd.Decimal everywhere, parse strings, never convert       |
+| **Circuit Breaker Absence** | Cascading failures, resource exhaustion | Per-exchange breaker (Closed→Open→Half-Open)                   |
+| **WebSocket Lifecycle**     | Silent data loss, stale data            | Heartbeat enforcement, auto-reconnect, resubscribe             |
 
 ### Phase 2-3 Risks
 
-| Pitfall | Consequence | Prevention |
-|---------|-------------|------------|
-| **Order Book Desync** | Trading on wrong prices | Buffer + REST snapshot + sequence validation |
-| **State Machine Races** | Invalid transitions (FILLED→NEW) | Explicit valid transitions, deduplicate by update ID |
-| **Duplicate Orders** | Double positions, unexpected exposure | Client order IDs, query before retry on timeout |
+| Pitfall                 | Consequence                           | Prevention                                           |
+| ----------------------- | ------------------------------------- | ---------------------------------------------------- |
+| **Order Book Desync**   | Trading on wrong prices               | Buffer + REST snapshot + sequence validation         |
+| **State Machine Races** | Invalid transitions (FILLED→NEW)      | Explicit valid transitions, deduplicate by update ID |
+| **Duplicate Orders**    | Double positions, unexpected exposure | Client order IDs, query before retry on timeout      |
 
 ### Exchange-Specific Gotchas
 
 **Binance:**
+
 - Weight-based rate limiting (6000/minute, endpoint-specific weights)
 - recvWindow default 5000ms, max 60000ms
 - WebSocket symbols must be lowercase
 - Order book sync: buffer events → get snapshot → validate U/u sequence
 
 **Bybit:**
+
 - Different auth for WebSocket (`GET/realtime{expires}`)
 - DCP (Disconnect Cancel Protect) cancels orders after 10s disconnect
 - V5 unified API requires `category` parameter
@@ -148,6 +154,7 @@ Critical pitfalls that cause production failures or rewrites.
 Synthesized from dependencies, risk mitigation, and incremental delivery.
 
 ### Phase 1: Foundation (Week 1-2)
+
 **Deliverables:** Domain models, error types, mock driver, core actors
 
 1. Domain models with apd.Decimal types
@@ -162,6 +169,7 @@ Synthesized from dependencies, risk mitigation, and incremental delivery.
 **Rationale:** Without clock sync and rate limiting, nothing works safely. These are prerequisites.
 
 ### Phase 2: Exchange Infrastructure (Week 2-4)
+
 **Deliverables:** REST client, WebSocket client, Binance driver
 
 1. Driver interface definition
@@ -174,6 +182,7 @@ Synthesized from dependencies, risk mitigation, and incremental delivery.
 **Rationale:** Binance as reference implementation. Bybit follows same patterns.
 
 ### Phase 3: Market Data Pipeline (Week 4-6)
+
 **Deliverables:** Real-time tickers, order books, trades
 
 1. MarketDataActor (subscription management, parsing)
@@ -184,6 +193,7 @@ Synthesized from dependencies, risk mitigation, and incremental delivery.
 **Rationale:** Read-only data is easier to test before order management.
 
 ### Phase 4: Order Management (Week 5-7)
+
 **Deliverables:** Place/cancel orders, state tracking
 
 1. OrderCommandActor (CQRS write path)
@@ -195,6 +205,7 @@ Synthesized from dependencies, risk mitigation, and incremental delivery.
 **Rationale:** Critical path requires market data working for realistic testing.
 
 ### Phase 5: Bybit Driver (Week 6-8)
+
 **Deliverables:** Second exchange support
 
 1. Bybit REST driver
@@ -204,6 +215,7 @@ Synthesized from dependencies, risk mitigation, and incremental delivery.
 **Rationale:** Second exchange validates abstraction layer.
 
 ### Phase 6: Persistence & Aggregation (Week 7-9)
+
 **Deliverables:** Durable state, cross-exchange views
 
 1. PersistenceSupervisor
@@ -215,6 +227,7 @@ Synthesized from dependencies, risk mitigation, and incremental delivery.
 **Rationale:** Persistence can use mock stores earlier. Aggregation needs multiple exchanges.
 
 ### Phase 7: Public API & Examples (Week 8-10)
+
 **Deliverables:** Production-ready library
 
 1. Connector public interface
@@ -230,14 +243,15 @@ Synthesized from dependencies, risk mitigation, and incremental delivery.
 
 Phases that may need deeper `/gsd-research-phase` investigation:
 
-| Phase | Research Needed | Why |
-|-------|-----------------|-----|
-| **Binance Driver** | API v3 specifics, testnet endpoints | Exchange APIs change frequently |
-| **Bybit Driver** | V5 WebSocket message formats, auth | Less documented than Binance |
-| **Persistence** | Database choice (PostgreSQL vs TimescaleDB) | Depends on scale requirements |
-| **Deployment** | Container orchestration, secrets management | Infrastructure-specific |
+| Phase              | Research Needed                             | Why                             |
+| ------------------ | ------------------------------------------- | ------------------------------- |
+| **Binance Driver** | API v3 specifics, testnet endpoints         | Exchange APIs change frequently |
+| **Bybit Driver**   | V5 WebSocket message formats, auth          | Less documented than Binance    |
+| **Persistence**    | Database choice (PostgreSQL vs TimescaleDB) | Depends on scale requirements   |
+| **Deployment**     | Container orchestration, secrets management | Infrastructure-specific         |
 
 Phases with well-documented patterns (skip additional research):
+
 - Domain models (standard Go patterns)
 - Actor supervision (Ergo docs are comprehensive)
 - Circuit breaker (standard pattern)
@@ -259,15 +273,16 @@ Phases with well-documented patterns (skip additional research):
 
 ## Confidence Assessment
 
-| Area | Confidence | Notes |
-|------|------------|-------|
-| **Stack** | HIGH | Ergo v3.10 mature, apd production-proven, zerolog battle-tested |
-| **Features** | HIGH | Based on CCXT reference, Binance/Bybit official docs |
-| **Architecture** | HIGH | Supervisor patterns from Ergo docs, CQRS from production case studies |
-| **Pitfalls** | HIGH | From official exchange docs and real-world CCXT issues |
-| **Timeline** | MEDIUM | Estimates based on complexity, actual velocity unknown |
+| Area             | Confidence | Notes                                                                 |
+| ---------------- | ---------- | --------------------------------------------------------------------- |
+| **Stack**        | HIGH       | Ergo v3.10 mature, apd production-proven, zerolog battle-tested       |
+| **Features**     | HIGH       | Based on CCXT reference, Binance/Bybit official docs                  |
+| **Architecture** | HIGH       | Supervisor patterns from Ergo docs, CQRS from production case studies |
+| **Pitfalls**     | HIGH       | From official exchange docs and real-world CCXT issues                |
+| **Timeline**     | MEDIUM     | Estimates based on complexity, actual velocity unknown                |
 
 **Gaps to address during implementation:**
+
 - Binance API v3 endpoint specifics (use MCP Context7 during driver development)
 - Bybit V5 WebSocket message format details
 - Persistence layer design (defer to Phase 6)
@@ -282,4 +297,5 @@ Phases with well-documented patterns (skip additional research):
 - **PITFALLS.md:** Binance/Bybit official docs, CCXT issues, production incident reports
 
 ---
-*Research synthesized from 4 parallel research outputs: STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md*
+
+_Research synthesized from 4 parallel research outputs: STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md_

@@ -78,8 +78,8 @@ func NormalizeSymbol(exchangeSymbol string) string {
 	}
 
 	for _, quote := range quoteCurrencies {
-		if strings.HasSuffix(symbol, quote) {
-			base := strings.TrimSuffix(symbol, quote)
+		if before, ok := strings.CutSuffix(symbol, quote); ok {
+			base := before
 			if base != "" {
 				return base + "/" + quote
 			}

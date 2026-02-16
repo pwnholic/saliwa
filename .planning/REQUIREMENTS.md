@@ -100,64 +100,66 @@ Deferred to future release. Tracked but not in current roadmap.
 
 Explicitly excluded. Documented to prevent scope creep.
 
-| Feature | Reason |
-|---------|--------|
-| Trading GUI/Dashboard | Library focus is API connectivity. GUI is a separate product. |
-| Strategy Framework | Users have their own strategies. Frameworks constrain flexibility. |
-| Backtesting Engine | Different domain with different requirements. |
-| Signal/Alert System | Notifications are application-level concerns. |
-| Portfolio Management | Accounting, P&L tracking are separate concerns. |
-| FIX Protocol | Niche requirement for institutional users only. |
+| Feature               | Reason                                                             |
+| --------------------- | ------------------------------------------------------------------ |
+| Trading GUI/Dashboard | Library focus is API connectivity. GUI is a separate product.      |
+| Strategy Framework    | Users have their own strategies. Frameworks constrain flexibility. |
+| Backtesting Engine    | Different domain with different requirements.                      |
+| Signal/Alert System   | Notifications are application-level concerns.                      |
+| Portfolio Management  | Accounting, P&L tracking are separate concerns.                    |
+| FIX Protocol          | Niche requirement for institutional users only.                    |
 
 ## Traceability
 
 Which phases cover which requirements. Updated during roadmap creation.
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| CONN-01 | Phase 1 | Pending |
-| CONN-02 | Phase 1 | Pending |
-| CONN-03 | Phase 2 | Pending |
-| CONN-04 | Phase 2 | Pending |
-| CONN-05 | Phase 1 | Pending |
-| CONN-06 | Phase 1 | Pending |
-| CONN-07 | Phase 2 | Pending |
-| CONN-08 | Phase 1 | Pending |
-| CONN-09 | Phase 1 | Pending |
-| MKTD-01 | Phase 3 | Pending |
-| MKTD-02 | Phase 3 | Pending |
-| MKTD-03 | Phase 3 | Pending |
-| MKTD-04 | Phase 3 | Pending |
-| MKTD-05 | Phase 3 | Pending |
-| MKTD-06 | Phase 1 | Pending |
-| ORDR-01 | Phase 4 | Pending |
-| ORDR-02 | Phase 4 | Pending |
-| ORDR-03 | Phase 4 | Pending |
-| ORDR-04 | Phase 4 | Pending |
-| ORDR-05 | Phase 4 | Pending |
-| ORDR-06 | Phase 4 | Pending |
-| ORDR-07 | Phase 4 | Pending |
-| ORDR-08 | Phase 4 | Pending |
-| ORDR-09 | Phase 4 | Pending |
-| ACCT-01 | Phase 4 | Pending |
-| ACCT-02 | Phase 4 | Pending |
-| ACCT-03 | Phase 4 | Pending |
-| ACCT-04 | Phase 4 | Pending |
-| RESL-01 | Phase 1 | Pending |
-| RESL-02 | Phase 1 | Pending |
-| RESL-03 | Phase 1 | Pending |
-| RESL-04 | Phase 1 | Pending |
-| RESL-05 | Phase 1 | Pending |
-| RESL-06 | Phase 1 | Pending |
-| CRSX-01 | Phase 5 | Pending |
-| CRSX-02 | Phase 5 | Pending |
-| CRSX-03 | Phase 5 | Pending |
+| Requirement | Phase   | Status  |
+| ----------- | ------- | ------- |
+| CONN-01     | Phase 1 | Pending |
+| CONN-02     | Phase 1 | Pending |
+| CONN-03     | Phase 2 | Pending |
+| CONN-04     | Phase 2 | Pending |
+| CONN-05     | Phase 1 | Pending |
+| CONN-06     | Phase 1 | Pending |
+| CONN-07     | Phase 2 | Pending |
+| CONN-08     | Phase 1 | Pending |
+| CONN-09     | Phase 1 | Pending |
+| MKTD-01     | Phase 3 | Pending |
+| MKTD-02     | Phase 3 | Pending |
+| MKTD-03     | Phase 3 | Pending |
+| MKTD-04     | Phase 3 | Pending |
+| MKTD-05     | Phase 3 | Pending |
+| MKTD-06     | Phase 1 | Pending |
+| ORDR-01     | Phase 4 | Pending |
+| ORDR-02     | Phase 4 | Pending |
+| ORDR-03     | Phase 4 | Pending |
+| ORDR-04     | Phase 4 | Pending |
+| ORDR-05     | Phase 4 | Pending |
+| ORDR-06     | Phase 4 | Pending |
+| ORDR-07     | Phase 4 | Pending |
+| ORDR-08     | Phase 4 | Pending |
+| ORDR-09     | Phase 4 | Pending |
+| ACCT-01     | Phase 4 | Pending |
+| ACCT-02     | Phase 4 | Pending |
+| ACCT-03     | Phase 4 | Pending |
+| ACCT-04     | Phase 4 | Pending |
+| RESL-01     | Phase 1 | Pending |
+| RESL-02     | Phase 1 | Pending |
+| RESL-03     | Phase 1 | Pending |
+| RESL-04     | Phase 1 | Pending |
+| RESL-05     | Phase 1 | Pending |
+| RESL-06     | Phase 1 | Pending |
+| CRSX-01     | Phase 5 | Pending |
+| CRSX-02     | Phase 5 | Pending |
+| CRSX-03     | Phase 5 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 36 total
 - Mapped to phases: 36
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-02-16*
-*Last updated: 2026-02-16 after initial definition*
+
+_Requirements defined: 2026-02-16_
+_Last updated: 2026-02-16 after initial definition_

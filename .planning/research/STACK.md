@@ -16,17 +16,17 @@ The choices are prescriptive based on verified current versions from Context7 an
 
 ## Core Technologies
 
-| Technology | Version | Purpose | Confidence |
-|------------|---------|---------|------------|
-| Go | 1.25+ | Runtime environment | HIGH |
-| Ergo Framework | v3.10 | Actor system & supervision | HIGH |
-| cockroachdb/apd | v3 | Arbitrary precision decimals | HIGH |
-| lxzan/gws | latest | WebSocket client | MEDIUM |
-| resty | v3-beta / v2 | HTTP REST client | MEDIUM |
-| zerolog | latest | Structured logging | HIGH |
-| golang.org/x/time/rate | latest | Token bucket rate limiting | HIGH |
-| golang.org/x/sync | latest | errgroup, singleflight | HIGH |
-| sony/gobreaker | latest | Circuit breaker | HIGH |
+| Technology             | Version      | Purpose                      | Confidence |
+| ---------------------- | ------------ | ---------------------------- | ---------- |
+| Go                     | 1.25+        | Runtime environment          | HIGH       |
+| Ergo Framework         | v3.10        | Actor system & supervision   | HIGH       |
+| cockroachdb/apd        | v3           | Arbitrary precision decimals | HIGH       |
+| lxzan/gws              | latest       | WebSocket client             | MEDIUM     |
+| resty                  | v3-beta / v2 | HTTP REST client             | MEDIUM     |
+| zerolog                | latest       | Structured logging           | HIGH       |
+| golang.org/x/time/rate | latest       | Token bucket rate limiting   | HIGH       |
+| golang.org/x/sync      | latest       | errgroup, singleflight       | HIGH       |
+| sony/gobreaker         | latest       | Circuit breaker              | HIGH       |
 
 ---
 
@@ -37,6 +37,7 @@ The choices are prescriptive based on verified current versions from Context7 an
 **Import:** `ergo.services/ergo@latest`
 
 **Rationale:**
+
 - **Erlang/OTP patterns in Go**: Brings battle-tested actor supervision patterns to Go
 - **Supervisor hierarchies**: Native support for OneForOne, AllForOne, RestForOne strategies
 - **Network transparency**: Actors can communicate across nodes seamlessly
@@ -44,6 +45,7 @@ The choices are prescriptive based on verified current versions from Context7 an
 - **Message passing**: `gen.Call` (sync), `gen.Cast` (async), `gen.Send` (fire-and-forget)
 
 **Key patterns for exchange connectors:**
+
 ```go
 // Supervisor with transient restart (only restart on error)
 spec := act.SupervisorSpec{
@@ -74,6 +76,7 @@ func (a *MyActor) Terminate(reason error) { /* cleanup */ }
 **Import:** `github.com/cockroachdb/apd/v3`
 
 **Rationale:**
+
 - **NEVER use float64 for money** - This is non-negotiable for financial software
 - **IEEE 754 alternative**: Implements General Decimal Arithmetic specification
 - **Precision control**: Configurable precision (default 34 digits), rounding modes
@@ -81,6 +84,7 @@ func (a *MyActor) Terminate(reason error) { /* cleanup */ }
 - **Production proven**: Used by CockroachDB for financial calculations
 
 **Usage pattern:**
+
 ```go
 import "github.com/cockroachdb/apd/v3"
 
@@ -105,6 +109,7 @@ if result.Cmp(other) > 0 {
 ```
 
 **Why NOT shopspring/decimal:**
+
 - apd has better precision control and condition flags
 - apd is more actively maintained by CockroachDB team
 - apd supports scientific functions (Pow, Sqrt, Ln, Exp)
@@ -120,6 +125,7 @@ if result.Cmp(other) > 0 {
 **Import:** `github.com/lxzan/gws@latest`
 
 **Rationale:**
+
 - **High performance**: Optimized for concurrent environments
 - **Event-based API**: Clean interface with `OnOpen`, `OnClose`, `OnMessage`, `OnPing`, `OnPong`
 - **Parallel processing**: `ParallelEnabled` for concurrent message handling
@@ -127,6 +133,7 @@ if result.Cmp(other) > 0 {
 - **Error recovery**: Built-in recovery mechanism
 
 **Usage pattern:**
+
 ```go
 type WSHandler struct {
     conn *gws.Conn
@@ -172,6 +179,7 @@ upgrader := gws.NewUpgrader(&handler{}, &gws.ServerOption{
 **Import:** `resty.dev/v3` (v3-beta) or `github.com/go-resty/resty/v2` (stable)
 
 **Rationale:**
+
 - **Rich retry mechanisms**: Configurable retry counts, wait times, conditions
 - **Middleware support**: Request/response middleware for auth, logging
 - **Circuit breaker integration**: Built-in circuit breaker support in v3
@@ -179,12 +187,14 @@ upgrader := gws.NewUpgrader(&handler{}, &gws.ServerOption{
 - **Context-aware**: Proper context propagation
 
 **v3 Breaking Changes (awareness required):**
+
 - Requires `defer client.Close()` after creation
 - Uses context with timeout instead of `http.Client.Timeout`
 - Retries only idempotent methods by default
 - Custom URL: `resty.dev/v3`
 
 **Usage pattern:**
+
 ```go
 import "resty.dev/v3"
 
@@ -208,6 +218,7 @@ resp, err := client.R().
 ```
 
 **Why NOT standard net/http:**
+
 - No built-in retry logic
 - More boilerplate for common patterns
 - No middleware support
@@ -223,6 +234,7 @@ resp, err := client.R().
 **Import:** `github.com/rs/zerolog/log`
 
 **Rationale:**
+
 - **Zero allocation**: Minimizes GC pressure in hot paths
 - **JSON by default**: Structured output for log aggregation
 - **Level filtering**: Trace, Debug, Info, Warn, Error, Fatal, Panic
@@ -231,6 +243,7 @@ resp, err := client.R().
 - **Field types**: Strongly typed fields (Str, Int, Dur, Err, etc.)
 
 **Usage pattern:**
+
 ```go
 import (
     "github.com/rs/zerolog"
@@ -261,6 +274,7 @@ if e := log.Debug(); e.Enabled() {
 **Status:** Standard library structured logging. Good choice if you prefer zero dependencies.
 
 **Consider slog when:**
+
 - Want standard library only
 - Don't need zero-allocation guarantees
 - Prefer official Go tooling
@@ -278,6 +292,7 @@ if e := log.Debug(); e.Enabled() {
 **Import:** `golang.org/x/time/rate`
 
 **Rationale:**
+
 - **Official Go x-package**: Maintained by Go team
 - **Token bucket algorithm**: Industry standard for rate limiting
 - **Flexible**: `Allow()`, `Wait()`, `Reserve()` patterns
@@ -285,6 +300,7 @@ if e := log.Debug(); e.Enabled() {
 - **Context-aware**: `Wait(ctx)` respects cancellation
 
 **Usage pattern:**
+
 ```go
 import "golang.org/x/time/rate"
 
@@ -306,6 +322,7 @@ if err := limiter.Wait(ctx); err != nil {
 ```
 
 **For Binance weighted rate limiting:**
+
 - Create separate limiters for different weight classes
 - Track cumulative weight with `SetLimit()` / `SetBurst()`
 - Consider wrapping in a `WeightedLimiter` type
@@ -321,11 +338,13 @@ if err := limiter.Wait(ctx); err != nil {
 **Import:** `golang.org/x/sync/errgroup`
 
 **Rationale:**
+
 - **Error propagation**: First error from any goroutine is returned
 - **Context cancellation**: Automatic cancellation on first error
 - **Bounded parallelism**: `SetLimit(n)` for concurrency control
 
 **Usage pattern:**
+
 ```go
 import "golang.org/x/sync/errgroup"
 
@@ -349,11 +368,13 @@ if err := g.Wait(); err != nil {
 **Import:** `golang.org/x/sync/singleflight`
 
 **Rationale:**
+
 - **Request deduplication**: Prevent thundering herd
 - **Cache stampede protection**: Multiple callers share same result
 - **Critical for exchanges**: Prevent duplicate REST calls for same data
 
 **Usage pattern:**
+
 ```go
 import "golang.org/x/sync/singleflight"
 
@@ -381,12 +402,14 @@ func GetTicker(symbol string) (*Ticker, error) {
 **Import:** `github.com/sony/gobreaker`
 
 **Rationale:**
+
 - **Standard pattern**: Closed → Open → Half-Open → Closed state machine
 - **Configurable thresholds**: `ReadyToTrip` function for custom logic
 - **State callbacks**: `OnStateChange` for monitoring
 - **Generic support**: `CircuitBreaker[T]` for type safety
 
 **Usage pattern:**
+
 ```go
 import "github.com/sony/gobreaker"
 
@@ -420,47 +443,47 @@ result, err := cb.Execute(func() (string, error) {
 
 ### WebSocket: gorilla/websocket
 
-| Aspect | gorilla/websocket | lxzan/gws |
-|--------|-------------------|-----------|
-| Popularity | Higher | Growing |
-| Maintenance | Uncertain (archived/unarchived) | Active |
-| Performance | Good | Better (benchmarks) |
-| API | Low-level | Event-based |
-| Parallel | Manual | Built-in |
+| Aspect      | gorilla/websocket               | lxzan/gws           |
+| ----------- | ------------------------------- | ------------------- |
+| Popularity  | Higher                          | Growing             |
+| Maintenance | Uncertain (archived/unarchived) | Active              |
+| Performance | Good                            | Better (benchmarks) |
+| API         | Low-level                       | Event-based         |
+| Parallel    | Manual                          | Built-in            |
 
 **Decision:** Use gws for active maintenance and better concurrency support.
 
 ### HTTP: Standard library
 
-| Aspect | net/http | resty |
-|--------|----------|-------|
-| Dependencies | None | Minimal |
-| Retry | Manual | Built-in |
-| Middleware | Manual | Built-in |
-| DX | Verbose | Fluent |
+| Aspect       | net/http | resty    |
+| ------------ | -------- | -------- |
+| Dependencies | None     | Minimal  |
+| Retry        | Manual   | Built-in |
+| Middleware   | Manual   | Built-in |
+| DX           | Verbose  | Fluent   |
 
 **Decision:** Use resty for production-grade features (retry, middleware, circuit breaker).
 
 ### Logging: log/slog vs zerolog
 
-| Aspect | slog | zerolog |
-|--------|------|---------|
-| Dependencies | None | Minimal |
-| Allocations | Some | Zero |
-| Performance | Good | Excellent |
-| Ecosystem | Standard | Rich |
+| Aspect       | slog     | zerolog   |
+| ------------ | -------- | --------- |
+| Dependencies | None     | Minimal   |
+| Allocations  | Some     | Zero      |
+| Performance  | Good     | Excellent |
+| Ecosystem    | Standard | Rich      |
 
 **Decision:** zerolog for high-throughput requirements; slog acceptable for simpler needs.
 
 ### Decimals: shopspring/decimal vs apd
 
-| Aspect | shopspring/decimal | cockroachdb/apd |
-|--------|-------------------|-----------------|
-| API | Simpler | More features |
-| Precision | Fixed | Configurable |
-| Condition flags | No | Yes |
-| Scientific functions | Limited | Full |
-| Maintenance | Active | Active (CockroachDB) |
+| Aspect               | shopspring/decimal | cockroachdb/apd      |
+| -------------------- | ------------------ | -------------------- |
+| API                  | Simpler            | More features        |
+| Precision            | Fixed              | Configurable         |
+| Condition flags      | No                 | Yes                  |
+| Scientific functions | Limited            | Full                 |
+| Maintenance          | Active             | Active (CockroachDB) |
 
 **Decision:** apd for production-grade financial calculations with condition handling.
 
@@ -496,16 +519,16 @@ go get github.com/sony/gobreaker@latest
 
 ## Confidence Levels
 
-| Category | Level | Reason |
-|----------|-------|--------|
-| Actor Framework | HIGH | Ergo v3.10 is mature with active development |
-| Decimal Arithmetic | HIGH | apd v3 is production-proven by CockroachDB |
-| WebSocket | MEDIUM | gws is performant but smaller community than gorilla |
-| HTTP Client | MEDIUM | resty v3 in beta; v2 is stable |
-| Logging | HIGH | zerolog is battle-tested with zero-allocation guarantees |
-| Rate Limiting | HIGH | Official x-package, well-documented |
-| Concurrency | HIGH | Official x-packages, widely adopted |
-| Circuit Breaker | HIGH | gobreaker is simple, well-tested, widely used |
+| Category           | Level  | Reason                                                   |
+| ------------------ | ------ | -------------------------------------------------------- |
+| Actor Framework    | HIGH   | Ergo v3.10 is mature with active development             |
+| Decimal Arithmetic | HIGH   | apd v3 is production-proven by CockroachDB               |
+| WebSocket          | MEDIUM | gws is performant but smaller community than gorilla     |
+| HTTP Client        | MEDIUM | resty v3 in beta; v2 is stable                           |
+| Logging            | HIGH   | zerolog is battle-tested with zero-allocation guarantees |
+| Rate Limiting      | HIGH   | Official x-package, well-documented                      |
+| Concurrency        | HIGH   | Official x-packages, widely adopted                      |
+| Circuit Breaker    | HIGH   | gobreaker is simple, well-tested, widely used            |
 
 ---
 
@@ -524,18 +547,19 @@ go get github.com/sony/gobreaker@latest
 
 ## Summary
 
-| Layer | Technology | Why |
-|-------|------------|-----|
-| Actor System | Ergo v3.10 | Erlang/OTP patterns for fault tolerance |
-| Decimals | cockroachdb/apd v3 | Financial precision, condition flags |
-| WebSocket | lxzan/gws | Performance, parallel processing |
-| HTTP | resty v3/v2 | Retry, middleware, circuit breaker |
-| Logging | zerolog | Zero-allocation, structured JSON |
-| Rate Limiting | golang.org/x/time/rate | Official, token bucket |
-| Concurrency | golang.org/x/sync | errgroup, singleflight |
-| Circuit Breaker | sony/gobreaker | State machine, configurable |
+| Layer           | Technology             | Why                                     |
+| --------------- | ---------------------- | --------------------------------------- |
+| Actor System    | Ergo v3.10             | Erlang/OTP patterns for fault tolerance |
+| Decimals        | cockroachdb/apd v3     | Financial precision, condition flags    |
+| WebSocket       | lxzan/gws              | Performance, parallel processing        |
+| HTTP            | resty v3/v2            | Retry, middleware, circuit breaker      |
+| Logging         | zerolog                | Zero-allocation, structured JSON        |
+| Rate Limiting   | golang.org/x/time/rate | Official, token bucket                  |
+| Concurrency     | golang.org/x/sync      | errgroup, singleflight                  |
+| Circuit Breaker | sony/gobreaker         | State machine, configurable             |
 
 This stack provides a solid foundation for building a production-grade cryptocurrency exchange connector with:
+
 - **Financial correctness** (apd decimals)
 - **Fault tolerance** (Ergo supervisors, circuit breaker)
 - **High performance** (zerolog, gws)

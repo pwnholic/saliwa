@@ -53,13 +53,14 @@ A production-grade Go library for connecting to cryptocurrency exchanges (Binanc
 
 ## Key Decisions
 
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| Ergo Framework over raw goroutines | Built-in supervision, event system, network transparency | — Pending |
-| CQRS for orders | Separate write path (commands) from read path (state queries) | — Pending |
-| gws over gorilla/websocket | Lower allocation, better performance under load | — Pending |
-| Memory persistence first | Simpler testing, add real backends when needed | — Pending |
-| Driver interface pattern | Easy to add exchanges, mock for testing | — Pending |
+| Decision                           | Rationale                                                     | Outcome   |
+| ---------------------------------- | ------------------------------------------------------------- | --------- |
+| Ergo Framework over raw goroutines | Built-in supervision, event system, network transparency      | — Pending |
+| CQRS for orders                    | Separate write path (commands) from read path (state queries) | — Pending |
+| gws over gorilla/websocket         | Lower allocation, better performance under load               | — Pending |
+| Memory persistence first           | Simpler testing, add real backends when needed                | — Pending |
+| Driver interface pattern           | Easy to add exchanges, mock for testing                       | — Pending |
 
 ---
-*Last updated: 2025-02-16 after initialization*
+
+_Last updated: 2025-02-16 after initialization_
