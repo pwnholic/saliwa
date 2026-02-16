@@ -20,14 +20,14 @@
 | Field        | Value                                   |
 | ------------ | --------------------------------------- |
 | **Phase**    | 1 of 5 (Foundation & Binance Infrastructure) |
-| **Plan**     | 2 of 4 complete                         |
+| **Plan**     | 3 of 4 complete                         |
 | **Status**   | In progress                             |
-| **Progress** | 6/37 requirements (16%)                 |
+| **Progress** | 9/37 requirements (24%)                 |
 
 ```
-Progress: [██░░░░░░░░░░░░░░░░░░] 16%
+Progress: [████░░░░░░░░░░░░░░░░] 24%
 
-Phase 1: █████░░░░░░░░░░░░░░░ 50% (2/4 plans)
+Phase 1: ███████░░░░░░░░░░░░░ 75% (3/4 plans)
 Phase 2: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 Phase 3: ░░░░░░░░░░░░░░░░░░░░ 0% (0/5)
 Phase 4: ░░░░░░░░░░░░░░░░░░░░ 0% (0/13)
@@ -42,7 +42,7 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 | -------------------------- | ----- |
 | Sessions on this milestone | 1     |
 | Phases completed           | 0     |
-| Requirements delivered     | 6     |
+| Requirements delivered     | 9     |
 | Blockers encountered       | 0     |
 | Plans revised              | 0     |
 
@@ -64,6 +64,10 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 | 01-02 | resty v3 for HTTP | Modern HTTP client with middleware support, requires explicit Close() | 2026-02-16 |
 | 01-02 | Weight-based rate limiting | Token bucket algorithm with server header tracking for accuracy | 2026-02-16 |
 | 01-02 | recvWindow defaults | 5000ms default, 60000ms max per Binance documentation | 2026-02-16 |
+| 01-03 | gws v1.8.9 for WebSocket | High performance, feature-rich, EventHandler interface | 2026-02-16 |
+| 01-03 | Exponential backoff with jitter | 1s initial, 60s max, 10% jitter to prevent thundering herd | 2026-02-16 |
+| 01-03 | 20-second ping interval | Within Binance's 1-minute keepalive requirement | 2026-02-16 |
+| 01-03 | Reconnection for new subscriptions | Binance doesn't support dynamic subscribe on existing connection | 2026-02-16 |
 
 ### Active Technical Context
 
@@ -105,11 +109,11 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 - [x] Created Phase 1 plans (4 plans in 3 waves)
 - [x] **Executed 01-01: Project foundation with domain models**
 - [x] **Executed 01-02: Binance REST client with signing & rate limiting**
+- [x] **Executed 01-03: Binance WebSocket client with reconnection**
 
 **Next Steps:**
 
-1. Execute 01-03: Binance WebSocket (Wave 2)
-2. Execute 01-04: Driver interface (Wave 3)
+1. Execute 01-04: Driver interface (Wave 3)
 
 ### Files Changed This Session
 
@@ -129,6 +133,9 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 | `internal/driver/binance/signer.go`   | Created              |
 | `internal/ratelimit/weighted.go`      | Created              |
 | `internal/driver/binance/rest_client.go` | Created           |
+| `internal/driver/binance/ws_messages.go` | Created           |
+| `internal/driver/binance/subscription.go` | Created          |
+| `internal/driver/binance/ws_client.go` | Created             |
 
 ---
 
@@ -136,7 +143,7 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 
 | Phase                    | Started     | Completed | Sessions | Notes              |
 | ------------------------ | ----------- | --------- | -------- | ------------------ |
-| 1 - Foundation & Binance | 2026-02-16  | -         | 1        | Plans 01-01, 01-02 done |
+| 1 - Foundation & Binance | 2026-02-16  | -         | 1        | Plans 01-01, 01-02, 01-03 done |
 | 2 - Bybit Driver         | -           | -         | -        | Not started        |
 | 3 - Market Data          | -           | -         | -        | Not started        |
 | 4 - Order Management     | -           | -         | -        | Not started        |
@@ -145,4 +152,4 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░ 0% (0/3)
 ---
 
 _State initialized: 2026-02-16_
-_Last updated: 2026-02-16T11:43:17Z_
+_Last updated: 2026-02-16T11:47:36Z_
